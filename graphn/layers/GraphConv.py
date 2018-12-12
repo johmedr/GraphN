@@ -1,9 +1,8 @@
 import keras.backend as K 
-from keras.engine.topology import Layer
 
-from ..core import GraphWrapper
+from ..core import GraphWrapper, GraphLayer
 
-class GraphConv(Layer):
+class GraphConv(GraphLayer):
     """
     First-order approximation of a graph spectral convolution, as suggested in 
     https://arxiv.org/pdf/1609.02907.pdf
@@ -26,12 +25,13 @@ class GraphConv(Layer):
         assert len(adj_shape) >= 2, "Expected more than 2 dims, get %s"%(adj_shape,)
         assert len(x_shape) >= 2, "Expected more than 2 dims, get %s"%(x_shape,)
 
+        self._output_graph_wrapper = GraphWrapper(n_nodes=adj_shape[-1], n_features=self.output_dim, name=self.name)
+
         self.kernel = self.add_weight(name='kernel', 
                                       shape=(x_shape[-1], self.output_dim),
                                       initializer='uniform',
                                       trainable=True)
 
-        self._output_graph_wrapper = GraphWrapper(n_nodes=adj_shape[-1], n_features=self.output_dim, name=self.name)
 
         super(GraphConv, self).build(input_shape)
 
