@@ -1,6 +1,7 @@
 import keras.backend as K 
 
 from ..core import GraphWrapper, GraphLayer
+from ..utils._general_utils import to_list
 
 class GraphPooling(GraphLayer):
     """ https://arxiv.org/pdf/1806.08804.pdf """
@@ -39,19 +40,27 @@ class GraphPooling(GraphLayer):
             adjacency = x.adjacency
             nodes = x.nodes
 
-        n_nodes_input = K.int_shape(adjacency)[-1]
+        adj_shape = K.int_shape(adjacency)
+        x_shape = K.int_shape(nodes)
+
+        assert len(adj_shape) <= 3 and len(x_shape) <= 3, "Not implemented for more than 3 dims (batch included)"
 
         assignment_transposed = K.transpose(self.assignment)
-        print(assignment_transposed.shape)
+
+        #new_adj_shape = [-1 if i is None else i for i in adj_shape[:-2]] + [self.output_dim, self.output_dim]
+        #new_nodes_shape = [-1 if i is None else i for i in x_shape[:-2]] + [self.output_dim, self._output_graph_wrapper.n_features]
+
+        new_adj_shape = [-1, self.output_dim, self.output_dim]
+        new_nodes_shape = [-1, self.output_dim, self._output_graph_wrapper.n_features]
 
         new_adj = K.dot(adjacency, self.assignment)
-        new_adj = K.reshape(new_adj, [n_nodes_input, -1])
+        new_adj = K.reshape(new_adj, [adj_shape[-1], -1])
         new_adj = K.dot(assignment_transposed, new_adj)
-        new_adj = K.reshape(new_adj, [-1, self._output_graph_wrapper.n_nodes, self._output_graph_wrapper.n_nodes])
+        new_adj = K.reshape(new_adj, new_adj_shape)
 
-        new_nodes = K.reshape(nodes, [n_nodes_input, -1])
+        new_nodes = K.reshape(nodes, [adj_shape[-1], -1])
         new_nodes = K.dot(assignment_transposed, new_nodes)
-        new_nodes = K.reshape(new_nodes, [-1, self._output_graph_wrapper.n_nodes, self._output_graph_wrapper.n_features])
+        new_nodes = K.reshape(new_nodes, new_nodes_shape)
 
         self._output_graph_wrapper.build(
             [new_adj, new_nodes])
