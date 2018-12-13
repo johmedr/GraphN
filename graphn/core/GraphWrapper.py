@@ -1,5 +1,7 @@
 import keras.backend as K
 
+
+
 class GraphWrapper(list): 
     def __init__(self, inputs=None, n_nodes=None, n_features=None, name="GraphWrapper"): 
         """ 
@@ -27,17 +29,14 @@ class GraphWrapper(list):
             self.n_nodes = K.int_shape(A)[-1]
             self.n_features = K.int_shape(x)[-1]
 
-            self.build(inputs)
+            self.build(A, x)
 
         else: 
             raise AttributeError("You must provide either inputs or shapes to build the GraphWrapper.")
 
-    def build(self, inputs): 
-        assert(isinstance(inputs, list) and len(inputs) == 2)
-        
-        A, x = inputs
-
+    def build(self, A, x): 
         shape = [K.int_shape(A), K.int_shape(x)]
+        
         self.check_shape(shape)
         self._keras_shape = shape
 

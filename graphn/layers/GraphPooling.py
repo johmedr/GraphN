@@ -20,9 +20,9 @@ class GraphPooling(GraphLayer):
         
         assert len(adj_shape) >= 2, "Expected more than 2 dims, get %s"%(adj_shape,)
         assert len(x_shape) >= 2, "Expected more than 2 dims, get %s"%(x_shape,)
-
-        self._output_graph_wrapper = GraphWrapper(n_nodes=self.output_dim, n_features=x_shape[-1], name=self.name)
         
+        self.add_output_graph(n_nodes=self.output_dim, n_features=x_shape[-1], name=self.name)
+
         self.assignment = self.add_weight(name='assignment', 
                                       shape=(adj_shape[-1], self.output_dim),
                                       initializer='uniform',
@@ -62,10 +62,4 @@ class GraphPooling(GraphLayer):
         new_nodes = K.dot(assignment_transposed, new_nodes)
         new_nodes = K.reshape(new_nodes, new_nodes_shape)
 
-        self._output_graph_wrapper.build(
-            [new_adj, new_nodes])
-
-        return self._output_graph_wrapper
-      
-    def compute_output_shape(self, input_shape):
-        return self._output_graph_wrapper.shape
+        return self.make_output_graph(new_adj, new_nodes)

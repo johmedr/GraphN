@@ -12,7 +12,6 @@ class GraphConv(GraphLayer):
         self.output_dim = n_filters
         self.activation = activation
         self.name = name
-        self._output_graph_wrapper = None
 
         super(GraphConv, self).__init__(**kwargs)
         
@@ -25,7 +24,7 @@ class GraphConv(GraphLayer):
         assert len(adj_shape) >= 2, "Expected more than 2 dims, get %s"%(adj_shape,)
         assert len(x_shape) >= 2, "Expected more than 2 dims, get %s"%(x_shape,)
 
-        self._output_graph_wrapper = GraphWrapper(n_nodes=adj_shape[-1], n_features=self.output_dim, name=self.name)
+        self.add_output_graph(n_nodes=adj_shape[-1], n_features=self.output_dim, name=self.name)
 
         self.kernel = self.add_weight(name='kernel', 
                                       shape=(x_shape[-1], self.output_dim),
@@ -45,10 +44,4 @@ class GraphConv(GraphLayer):
             adjacency = x.adjacency
             nodes = x.nodes
 
-        self._output_graph_wrapper.build(
-            [adjacency, self.activation(K.batch_dot(adjacency, K.dot(nodes, self.kernel)))])
-
-        return self._output_graph_wrapper
-        
-    def compute_output_shape(self, input_shape):
-        return self._output_graph_wrapper.shape
+        return self.make_output_graph(adjacency, self.activation(K.batch_dot(adjacency, K.dot(nodes, self.kernel))))
