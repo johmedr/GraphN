@@ -1,4 +1,6 @@
 from keras.engine.topology import Layer
+import keras.backend as K
+
 from .GraphWrapper import GraphWrapper
 
 class GraphLayer(Layer):
@@ -35,11 +37,14 @@ class GraphLayer(Layer):
     def __call__(self, inputs, **kwargs):
         outputs = super(GraphLayer, self).__call__(inputs, **kwargs)
 
-        # Catch output and turn in into a graph wrapper  
-        if isinstance(outputs, list) and len(outputs) == 2:
-            print(outputs)
-            outputs = self._output_graph_wrapper
-            print(outputs)
+        # Catch outputs and make sure to return a graph wrapper
+        if isinstance(outputs, list) and len(outputs) == 2: 
+
+            if self._output_graph_wrapper.adjacency != outputs[0]: 
+                self._output_graph_wrapper.adjacency = outputs[0]
+
+            if self._output_graph_wrapper.nodes != outputs[1]: 
+                self._output_graph_wrapper.adjacency = outputs[1]
 
         return outputs
         

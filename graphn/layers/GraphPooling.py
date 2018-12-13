@@ -1,14 +1,12 @@
 import keras.backend as K 
 
 from ..core import GraphWrapper, GraphLayer
-from ..utils._general_utils import to_list
 
 class GraphPooling(GraphLayer):
     """ https://arxiv.org/pdf/1806.08804.pdf """
     def __init__(self, output_dim, trainable=True, **kwargs):
         self.output_dim = output_dim
         self.trainable = trainable
-        self._output_graph_wrapper = None
 
         super(GraphPooling, self).__init__(**kwargs)
         
