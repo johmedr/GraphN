@@ -19,13 +19,17 @@ class GraphLayer(Layer):
                 Method add_output_graph() should be called in the build().")
 
         elif self._output_graph_wrapper is None:
-            raise ValueError("There is no graph attached with this layer. \
-                Method add_output_graph() should be called in the build().")
+            raise ValueError("There is no graph attached with the layer %s. \
+                Method add_output_graph() should be called in the build()."%self.name)
 
         self._output_graph_wrapper.build(adjacency, nodes)
         return self._output_graph_wrapper
 
     def compute_output_shape(self, input_shape):
+        if self._output_graph_wrapper is None: 
+            raise ValueError("There is no graph attached with the layer %s. \
+                Method add_output_graph() should be called in the build()."%self.name)
+
         return self._output_graph_wrapper.shape
 
     def __call__(self, inputs, **kwargs):
