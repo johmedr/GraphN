@@ -13,3 +13,9 @@ A non-exhaustive list of relevant papers:
 * [Hierarchical Graph Representation Learning with Differentiable Pooling, Ying, Z. et al. (2018)](https://arxiv.org/abs/1806.08804)
 * [Gated Graph Sequence Neural Networks, Li, Y. et al. (2015)](https://arxiv.org/abs/1511.05493)
 * [Variational Graph Auto-Encoders, Kipf, T. N., & Welling, M. (2016)](https://arxiv.org/abs/1611.07308)
+
+## Some interesting features to implement
+
+It would be awesome to work easily with directed labeled multi-graphs, as it's a nice representation for relational data. 
+Being able to easily interwork with ontologies is also quite convenient. At an higher level, enabling routines to handle 
+oneM2M's base ontology would simplify the development of deep learning applications in the IoT.   
