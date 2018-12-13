@@ -1,12 +1,13 @@
 import keras.backend as K 
 
-from ..core import GraphWrapper, GraphLayer
+from ..core import GraphLayer
 
 class GraphPoolingCell(GraphLayer):
     """ A simple pooling layer """
-    def __init__(self, output_dim, **kwargs):
+    def __init__(self, output_dim, kernel_regularizer=None, **kwargs):
         self.output_dim = output_dim
-
+        self.kernel_regularizer = kernel_regularizer 
+        
         super(GraphPoolingCell, self).__init__(**kwargs)
         
     def build(self, input_shape): 

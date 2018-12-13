@@ -5,7 +5,6 @@ from .GraphWrapper import GraphWrapper
 
 class GraphLayer(Layer):
 
-
     def __init__(self, **kwargs):
         super(GraphLayer, self).__init__(**kwargs)
         self._output_graph_wrapper = None

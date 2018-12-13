@@ -7,11 +7,12 @@ class GraphConv(GraphLayer):
     First-order approximation of a graph spectral convolution, as suggested in 
     https://arxiv.org/pdf/1609.02907.pdf
     """
-    def __init__(self, n_filters, activation=K.tanh, name="GraphConv", **kwargs):
+    def __init__(self, n_filters, activation=K.tanh, name="GraphConv", kernel_regularizer=None, **kwargs):
 
         self.output_dim = n_filters
         self.activation = activation
         self.name = name
+        self.kernel_regularizer = kernel_regularizer
 
         super(GraphConv, self).__init__(**kwargs)
         
@@ -28,6 +29,7 @@ class GraphConv(GraphLayer):
 
         self.kernel = self.add_weight(name='kernel', 
                                       shape=(x_shape[-1], self.output_dim),
+                                      regularizer=self.kernel_regularizer, 
                                       initializer='uniform',
                                       trainable=True)
 

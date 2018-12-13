@@ -25,6 +25,7 @@ a = Input(shape=(n_nodes, n_nodes), name='adjacency')
 x = Input(shape=(n_nodes, n_features), name='nodes')
 
 g = GraphWrapper([a, x])
+
 print(g.shape)
  
 pool1 = Input(shape=(15,5))
