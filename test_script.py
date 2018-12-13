@@ -1,5 +1,5 @@
 from graphn.core import GraphWrapper
-from graphn.layers import GraphConv, GraphPoolingCell
+from graphn.layers import GraphConv, GraphPoolingCell, GraphDiffPool
 
 from keras.layers import Input
 from keras.models import Model
@@ -31,7 +31,8 @@ pool1 = Input(shape=(15,5))
 pool2 = Input(shape=(5,1))
 
 h = GraphConv(10)(g)
-h = GraphPoolingCell(5)([h, pool1])
+print(h)
+h = GraphDiffPool(5)(h)
 h = GraphConv(20)(h)
 y = GraphPoolingCell(1)([h, pool2])
 

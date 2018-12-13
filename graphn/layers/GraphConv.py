@@ -39,9 +39,11 @@ class GraphConv(GraphLayer):
               - the nodes features (shape: (n_nodes, n_features))"""
         if isinstance(x, list): 
             adjacency, nodes = x
-        if isinstance(x, GraphWrapper): 
+        elif isinstance(x, GraphWrapper): 
             adjacency = x.adjacency
             nodes = x.nodes
+        else: 
+            raise ValueError()
 
         return self.make_output_graph(
             adjacency=adjacency, nodes=self.activation(K.batch_dot(adjacency, K.dot(nodes, self.kernel))))

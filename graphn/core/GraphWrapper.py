@@ -80,6 +80,9 @@ class GraphWrapper(_Wrapper):
 
         return True
 
+    def __str__(self):
+        return "GraphWrapper< adj:%s || nodes:%s >"%(self._adjacency, self._nodes)
+
     @property
     def nodes(self):
         return self._nodes

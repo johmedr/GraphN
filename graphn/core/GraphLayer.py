@@ -4,13 +4,17 @@ from itertools import chain
 from .GraphWrapper import GraphWrapper
 
 class GraphLayer(Layer):
+
+
     def __init__(self, **kwargs):
         super(GraphLayer, self).__init__(**kwargs)
         self._output_graph_wrapper = None
 
+
+
     def add_output_graph(self, n_nodes, n_features, name=None): 
         if name is None: 
-            name = "graph_wrapper_" + len(self._output_graph_wrapper.items())
+            name = "graph_wrapper_%s"%(self.name,)
 
         self._output_graph_wrapper = GraphWrapper(n_nodes=n_nodes, n_features=n_features, name=name)
         return self._output_graph_wrapper
