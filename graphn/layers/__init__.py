@@ -1,2 +1,2 @@
 from .GraphConv import GraphConv
-from .GraphPooling import GraphPooling
+from .GraphPoolingCell import GraphPoolingCell

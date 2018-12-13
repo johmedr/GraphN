@@ -1,5 +1,5 @@
 from keras.engine.topology import Layer
-import keras.backend as K
+from itertools import chain
 
 from .GraphWrapper import GraphWrapper
 
@@ -35,7 +35,16 @@ class GraphLayer(Layer):
         return self._output_graph_wrapper.shape
 
     def __call__(self, inputs, **kwargs):
-        outputs = super(GraphLayer, self).__call__(inputs, **kwargs)
+        
+        # Keras do not supports nested lists, unpack nodes and adjacency
+        if isinstance(inputs, list) and not isinstance(inputs, GraphWrapper): 
+            _inputs = list(chain.from_iterable([i for i in inputs if isinstance(i, GraphWrapper)]))
+            _inputs += [i for i in inputs if not isinstance(i, GraphWrapper)]
+
+        else: 
+            _inputs = inputs
+
+        outputs = super(GraphLayer, self).__call__(_inputs, **kwargs)
 
         # Catch outputs and make sure to return a graph wrapper
         if isinstance(outputs, list) and len(outputs) == 2: 
@@ -46,5 +55,5 @@ class GraphLayer(Layer):
             if self._output_graph_wrapper.nodes != outputs[1]: 
                 self._output_graph_wrapper.adjacency = outputs[1]
 
-        return outputs
+        return self._output_graph_wrapper
         

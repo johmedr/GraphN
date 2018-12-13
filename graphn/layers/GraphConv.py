@@ -31,7 +31,6 @@ class GraphConv(GraphLayer):
                                       initializer='uniform',
                                       trainable=True)
 
-
         super(GraphConv, self).build(input_shape)
 
     def call(self, x): 
@@ -44,4 +43,5 @@ class GraphConv(GraphLayer):
             adjacency = x.adjacency
             nodes = x.nodes
 
-        return self.make_output_graph(adjacency, self.activation(K.batch_dot(adjacency, K.dot(nodes, self.kernel))))
+        return self.make_output_graph(
+            adjacency=adjacency, nodes=self.activation(K.batch_dot(adjacency, K.dot(nodes, self.kernel))))

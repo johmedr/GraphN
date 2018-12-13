@@ -1,8 +1,6 @@
 from graphn.core import GraphWrapper
-from graphn.layers import GraphConv
-from graphn.layers import GraphPooling
+from graphn.layers import GraphConv, GraphPoolingCell
 
-import keras.backend as K 
 from keras.layers import Input
 from keras.models import Model
 
@@ -28,13 +26,16 @@ x = Input(shape=(n_nodes, n_features), name='nodes')
 
 g = GraphWrapper([a, x])
 print(g.shape)
+ 
+pool1 = Input(shape=(15,5))
+pool2 = Input(shape=(5,1))
 
 h = GraphConv(10)(g)
-h = GraphPooling(5)(h)
+h = GraphPoolingCell(5)([h, pool1])
 h = GraphConv(20)(h)
-y = GraphPooling(1)(h)
+y = GraphPoolingCell(1)([h, pool2])
 
-model = Model([a, x], y)
+model = Model([a, x, pool1, pool2], y)
 model.compile(optimizer='adam', loss='mse')
 
 show_model(model)
