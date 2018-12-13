@@ -1,8 +1,9 @@
 import keras.backend as K
 
+from ..utils._core_utils import _Wrapper
 
 
-class GraphWrapper(list): 
+class GraphWrapper(_Wrapper): 
     def __init__(self, inputs=None, n_nodes=None, n_features=None, name="GraphWrapper"): 
         """ 
             inputs: a list [adjacency, nodes] with 
@@ -43,8 +44,8 @@ class GraphWrapper(list):
         self._adjacency = A
         self._nodes = x
 
-        super(GraphWrapper, self).clear()
-        super(GraphWrapper, self).extend([self.adjacency, self.nodes])
+        super(GraphWrapper, self)._clear()
+        super(GraphWrapper, self)._extend([self.adjacency, self.nodes])
 
         self._built = True
 
@@ -100,5 +101,5 @@ class GraphWrapper(list):
     @property
     def shape(self):
         assert(self._built)
-
         return self._keras_shape
+
