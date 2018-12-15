@@ -25,8 +25,6 @@ class GraphConv(GraphLayer):
         assert len(adj_shape) >= 2, "Expected more than 2 dims, get %s"%(adj_shape,)
         assert len(x_shape) >= 2, "Expected more than 2 dims, get %s"%(x_shape,)
 
-        self.add_output_graph(n_nodes=adj_shape[-1], n_features=self.output_dim, name=self.name)
-
         self.kernel = self.add_weight(name='kernel', 
                                       shape=(x_shape[-1], self.output_dim),
                                       regularizer=self.kernel_regularizer, 

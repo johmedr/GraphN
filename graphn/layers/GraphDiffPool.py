@@ -34,8 +34,6 @@ class GraphDiffPool(GraphLayer):
         assert len(adj_shape) >= 2, "Expected more than 2 dims, get %s"%(adj_shape,)
         assert len(x_shape) >= 2, "Expected more than 2 dims, get %s"%(x_shape,)
 
-        self.add_output_graph(n_nodes=self.output_dim, n_features=x_shape[-1])
-
         if not self._gnn_embd_module: 
             self._gnn_embd_module = GraphConv(x_shape[-1])
 

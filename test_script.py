@@ -24,7 +24,7 @@ timesteps = 100
 a = Input(shape=(n_nodes, n_nodes), name='adjacency')
 x = Input(shape=(n_nodes, n_features), name='nodes')
 
-g = GraphWrapper([a, x])
+g = GraphWrapper(a, x)
 
 print(g.shape)
  
@@ -34,7 +34,9 @@ pool2 = Input(shape=(5,1))
 h = GraphConv(10)(g)
 print(h)
 h = GraphDiffPool(5)(h)
+print(h)
 h = GraphConv(20)(h)
+print(h)
 y = GraphPoolingCell(1)([h, pool2])
 
 model = Model([a, x, pool1, pool2], y)

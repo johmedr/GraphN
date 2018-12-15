@@ -21,8 +21,6 @@ class GraphPoolingCell(GraphLayer):
         assert len(assignment_shape) >= 2 and assignment_shape[-2] == adj_shape[-1] and assignment_shape[-1] == self.output_dim, \
             "Wrong assignment shape: get %s, expected the last 2 dims to be %s"%(assignment_shape, (adj_shape[-1], self.output_dim))
         
-        self.add_output_graph(n_nodes=self.output_dim, n_features=x_shape[-1], name=self.name)
-        
         super(GraphPoolingCell, self).build(input_shape)
         
     def call(self, x): 
@@ -47,7 +45,7 @@ class GraphPoolingCell(GraphLayer):
         #new_nodes_shape = [-1 if i is None else i for i in x_shape[:-2]] + [self.output_dim, self._output_graph_wrapper.n_features]
 
         new_adj_shape = [-1, self.output_dim, self.output_dim]
-        new_nodes_shape = [-1, self.output_dim, self._output_graph_wrapper.n_features]
+        new_nodes_shape = [-1, self.output_dim, x_shape[-1]]
 
         new_adj = K.dot(adjacency, assignment)
         new_adj = K.reshape(new_adj, [adj_shape[-1], -1])
