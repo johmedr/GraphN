@@ -52,7 +52,7 @@ class GraphDiffPool(GraphLayer):
 
     @staticmethod
     def assignment_loss(assignment):
-        return entropy(assignment, axis=0)
+        return K.mean(entropy(assignment, axis=0))
 
     def build(self, input_shape):
         assert isinstance(input_shape, list) and len(input_shape) == 2
@@ -81,7 +81,7 @@ class GraphDiffPool(GraphLayer):
         if not self.gnn_pool_module:
             # Row-wise softmax
             self.gnn_pool_module = GraphConv(
-                x_shape[-1],
+                self.output_dim,
                 activation=self.activation,
                 use_bias=self.use_bias,
                 kernel_initializer=self.kernel_initializer,
