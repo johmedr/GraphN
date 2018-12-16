@@ -1,14 +1,16 @@
-import keras.backend as K 
+import keras.backend as K
 from keras import activations, regularizers, initializers, constraints
 
-from ..core import GraphWrapper, GraphLayer
+from ..core import GraphLayer
+
 
 class GraphConv(GraphLayer):
     """
     First-order approximation of a graph spectral convolution, as suggested in 
     https://arxiv.org/pdf/1609.02907.pdf
     """
-    def __init__(self, filters, 
+
+    def __init__(self, filters,
                  activation=None,
                  use_bias=True,
                  kernel_initializer='glorot_uniform',
@@ -35,20 +37,22 @@ class GraphConv(GraphLayer):
         self.activity_regularizer = regularizers.get(activity_regularizer)
         self.kernel_constraint = constraints.get(kernel_constraint)
         self.bias_constraint = constraints.get(bias_constraint)
-        
-    def build(self, input_shape): 
+
+    def build(self, input_shape):
         """ Channel last: (batchs, n_nodes, n_features)"""
         assert(isinstance(input_shape, list))
 
         adj_shape, x_shape = input_shape
-        
-        assert len(adj_shape) >= 2, "Expected at least than 2 dims, get %s"%(adj_shape,)
-        assert len(x_shape) >= 2, "Expected at least than 2 dims, get %s"%(x_shape,)
+
+        assert len(adj_shape) >= 2, "Expected at least than 2 dims, get %s" % (
+            adj_shape,)
+        assert len(x_shape) >= 2, "Expected at least than 2 dims, get %s" % (
+            x_shape,)
 
         self.kernel = self.add_weight(shape=(x_shape[-1], self.filters),
                                       initializer=self.kernel_initializer,
                                       name='kernel',
-                                      regularizer=self.kernel_regularizer, 
+                                      regularizer=self.kernel_regularizer,
                                       constraint=self.kernel_constraint,
                                       trainable=True)
 
@@ -63,25 +67,26 @@ class GraphConv(GraphLayer):
 
         self.built = True
 
-    def call(self, x): 
+    def call(self, x):
         """ x: List/GraphWrapper 
               - the adjacency matrix (shape: (n_nodes, n_nodes))
               - the nodes features (shape: (n_nodes, n_features))"""
-        if isinstance(x, list): 
+        if isinstance(x, list):
             adjacency, nodes = x
-        else: 
+        else:
             raise ValueError()
-        
+
         new_nodes = K.dot(nodes, self.kernel)
 
-        if len(K.int_shape(nodes)) > 2: 
+        if len(K.int_shape(nodes)) > 2:
             new_nodes = K.batch_dot(adjacency, new_nodes)
-        else: 
+        else:
             new_nodes = K.dot(adjacency, new_nodes)
 
         if self.use_bias:
-            new_nodes = K.bias_add(new_nodes, self.bias, data_format='channels_last')
-        if self.activation is not None: 
+            new_nodes = K.bias_add(new_nodes, self.bias,
+                                   data_format='channels_last')
+        if self.activation is not None:
             new_nodes = self.activation(new_nodes)
 
         return self.make_output_graph(adjacency=adjacency, nodes=new_nodes)
@@ -102,4 +107,3 @@ class GraphConv(GraphLayer):
         }
         base_config = super(GraphConv, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
-
