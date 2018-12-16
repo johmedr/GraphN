@@ -4,11 +4,11 @@ from ..core import GraphLayer
 
 class GraphPoolingCell(GraphLayer):
     """ A simple pooling layer """
-    def __init__(self, output_dim, kernel_regularizer=None, **kwargs):
-        self.output_dim = output_dim
-        self.kernel_regularizer = kernel_regularizer 
-        
+    def __init__(self, output_dim, **kwargs):
+
         super(GraphPoolingCell, self).__init__(**kwargs)
+
+        self.output_dim = output_dim
         
     def build(self, input_shape): 
         """ Channel last: (batchs, n_nodes, n_features)"""
@@ -20,8 +20,8 @@ class GraphPoolingCell(GraphLayer):
         assert len(x_shape) >= 2, "Expected more than 2 dims, get %s"%(x_shape,)
         assert len(assignment_shape) >= 2 and assignment_shape[-2] == adj_shape[-1] and assignment_shape[-1] == self.output_dim, \
             "Wrong assignment shape: get %s, expected the last 2 dims to be %s"%(assignment_shape, (adj_shape[-1], self.output_dim))
-        
-        super(GraphPoolingCell, self).build(input_shape)
+
+        self._built = True
         
     def call(self, x): 
         """ x: List containing 
@@ -60,3 +60,11 @@ class GraphPoolingCell(GraphLayer):
             new_nodes = K.dot(assignment_transposed, nodes)
 
         return self.make_output_graph(adjacency=new_adj, nodes=new_nodes)
+
+    def get_config(self):
+        config = {
+            'output_dim': self.output_dim
+        }
+        base_config = super(GraphPoolingCell, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
+
