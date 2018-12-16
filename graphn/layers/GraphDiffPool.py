@@ -61,7 +61,10 @@ class GraphDiffPool(GraphLayer):
 
         embeddings = self._gnn_embd_module(x)
         assignment = self._gnn_pool_module(x).nodes
-        assignment = K.reshape(assignment, [adj_shape[-1], self.output_dim])
+        
+        if len(adj_shape) > 2: 
+            assignment = K.reshape(assignment, [adj_shape[-1], self.output_dim])
+
         pooled = self._pooling_cell([embeddings, assignment])
 
         self.add_loss([GraphDiffPool.pooling_loss(assignment, adjacency), 

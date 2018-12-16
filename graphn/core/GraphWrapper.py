@@ -65,9 +65,10 @@ class GraphWrapper(_Wrapper):
         if adjacency_shape[-1] !=  adjacency_shape[-2]: 
             raise ValueError("Wrong adjacency shape: get %s."%(adjacency_shape[-2:]))
 
-        if nodes_shape[-2] != adjacency_shape[-1]: 
-            raise ValueError("Adjacency shape and nodes shape doesn't match. Get %s and %s."%(
-                adjacency_shape[-2:], nodes_shape[-2:]))
+        # Let keras do the job 
+        # if nodes_shape[-2] != adjacency_shape[-1]: 
+        #    raise ValueError("Adjacency shape and nodes shape doesn't match. Get %s and %s."%(
+        #        adjacency_shape[-2:], nodes_shape[-2:]))
           
         return True
 

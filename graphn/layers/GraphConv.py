@@ -44,6 +44,12 @@ class GraphConv(GraphLayer):
             nodes = x.nodes
         else: 
             raise ValueError()
+        
+        new_nodes = K.dot(nodes, self.kernel)
+        if len(K.int_shape(nodes)) > 2: 
+            new_nodes = K.batch_dot(adjacency, new_nodes)
+        else: 
+            new_nodes = K.dot(adjacency, new_nodes)
 
         return self.make_output_graph(
-            adjacency=adjacency, nodes=self.activation(K.batch_dot(adjacency, K.dot(nodes, self.kernel))))
+            adjacency=adjacency, nodes=self.activation(new_nodes))

@@ -30,9 +30,7 @@ class GraphPoolingCell(GraphLayer):
         if not (isinstance(x, list) and len(x) == 3): 
             raise AttributeError("Incorrect arguments for layer %s in call(). Get %s."%(self.name, x)) 
 
-        adjacency = x[0]
-        nodes = x[1]
-        assignment = x[2]
+        adjacency, nodes, assignment = x
 
         adj_shape = K.int_shape(adjacency)
         x_shape = K.int_shape(nodes)
@@ -44,16 +42,21 @@ class GraphPoolingCell(GraphLayer):
         #new_adj_shape = [-1 if i is None else i for i in adj_shape[:-2]] + [self.output_dim, self.output_dim]
         #new_nodes_shape = [-1 if i is None else i for i in x_shape[:-2]] + [self.output_dim, self._output_graph_wrapper.n_features]
 
-        new_adj_shape = [-1, self.output_dim, self.output_dim]
-        new_nodes_shape = [-1, self.output_dim, x_shape[-1]]
+        if len(adj_shape) > 2 and len(x_shape) > 2: 
+            new_adj_shape = [-1, self.output_dim, self.output_dim]
+            new_nodes_shape = [-1, self.output_dim, x_shape[-1]]
 
-        new_adj = K.dot(adjacency, assignment)
-        new_adj = K.reshape(new_adj, [adj_shape[-1], -1])
-        new_adj = K.dot(assignment_transposed, new_adj)
-        new_adj = K.reshape(new_adj, new_adj_shape)
+            new_adj = K.dot(adjacency, assignment)
+            new_adj = K.reshape(new_adj, [adj_shape[-1], -1])
+            new_adj = K.dot(assignment_transposed, new_adj)
+            new_adj = K.reshape(new_adj, new_adj_shape)
 
-        new_nodes = K.reshape(nodes, [adj_shape[-1], -1])
-        new_nodes = K.dot(assignment_transposed, new_nodes)
-        new_nodes = K.reshape(new_nodes, new_nodes_shape)
+            new_nodes = K.reshape(nodes, [adj_shape[-1], -1])
+            new_nodes = K.dot(assignment_transposed, new_nodes)
+            new_nodes = K.reshape(new_nodes, new_nodes_shape)
+
+        else: 
+            new_adj = K.dot(assignment_transposed, K.dot(adjacency, assignment))
+            new_nodes = K.dot(assignment_transposed, nodes)
 
         return self.make_output_graph(adjacency=new_adj, nodes=new_nodes)
