@@ -6,8 +6,9 @@ from ..core import GraphLayer
 
 class GraphConv(GraphLayer):
     """
-    First-order approximation of a graph spectral convolution, as suggested in 
-    https://arxiv.org/pdf/1609.02907.pdf
+    A graph convolution layer using the first-order approximation of 
+    Chebyshev polynomials, as suggested in "Semi-supervised classification with Graph Convolutional 
+    Networks" (T. Kipf and M. Welling, 2016, https://arxiv.org/pdf/1609.02907.pdf)
     """
 
     def __init__(self, filters,
@@ -39,8 +40,7 @@ class GraphConv(GraphLayer):
         self.bias_constraint = constraints.get(bias_constraint)
 
     def build(self, input_shape):
-        """ Channel last: (batchs, n_nodes, n_features)"""
-        assert(isinstance(input_shape, list))
+        assert isinstance(input_shape, list) and len(input_shape) == 2
 
         adj_shape, x_shape = input_shape
 
@@ -49,28 +49,34 @@ class GraphConv(GraphLayer):
         assert len(x_shape) >= 2, "Expected at least than 2 dims, get %s" % (
             x_shape,)
 
-        self.kernel = self.add_weight(shape=(x_shape[-1], self.filters),
-                                      initializer=self.kernel_initializer,
-                                      name='kernel',
-                                      regularizer=self.kernel_regularizer,
-                                      constraint=self.kernel_constraint,
-                                      trainable=True)
+        self.kernel = self.add_weight(
+            shape=(x_shape[-1], self.filters),
+            initializer=self.kernel_initializer,
+            name='kernel',
+            regularizer=self.kernel_regularizer,
+            constraint=self.kernel_constraint,
+            trainable=True
+        )
 
         if self.use_bias:
-            self.bias = self.add_weight(shape=(self.filters,),
-                                        initializer=self.bias_initializer,
-                                        name='bias',
-                                        regularizer=self.bias_regularizer,
-                                        constraint=self.bias_constraint)
+            self.bias = self.add_weight(
+                shape=(self.filters,),
+                initializer=self.bias_initializer,
+                name='bias',
+                regularizer=self.bias_regularizer,
+                constraint=self.bias_constraint
+            )
         else:
             self.bias = None
 
         self.built = True
 
     def call(self, x):
-        """ x: List/GraphWrapper 
-              - the adjacency matrix (shape: (n_nodes, n_nodes))
-              - the nodes features (shape: (n_nodes, n_features))"""
+        """ 
+        x: List/GraphWrapper 
+          - the adjacency matrix (shape: (n_nodes, n_nodes))
+          - the nodes features (shape: (n_nodes, n_features))
+          TODO: implement here the renormalization trick """
         if isinstance(x, list):
             adjacency, nodes = x
         else:

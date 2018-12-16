@@ -9,6 +9,19 @@ from ..utils import frobenius_norm, entropy
 
 
 class GraphDiffPool(GraphLayer):
+    """ 
+    Applies a hierarchical pooling on a graph, predicting a cluster assignment 
+    matrix transfering adjacency matrix and nodes to a new graph configuration. 
+    For more details, see the "Hierarchical Graph Representation Learning with
+    Differentiable Pooling" (Rex Ying et al., 2018, https://arxiv.org/pdf/1806.08804.pdf). 
+    Args: 
+        - output_dim: the number of nodes of the new graph,
+        - gnn_embd_module: a graph neural network computing an embedding for the nodes,
+        - gnn_pool_module: a graph neural network computing the cluster assignment matrix, 
+        - other 'classical' args for a trainable keras layer 
+    If gnn_embd_module or gnn_pool_module is None, the layer will build a GraphConv layer
+    with the 'classical' configuration arguments. 
+    """
 
     def __init__(self, output_dim,
                  gnn_embd_module=None,
@@ -64,6 +77,7 @@ class GraphDiffPool(GraphLayer):
         assert len(x_shape) >= 2, "Expected more than 2 dims, get %s" % (
             x_shape,)
 
+        # Build an embedding module if none is provided
         if not self.gnn_embd_module:
             self.gnn_embd_module = GraphConv(
                 x_shape[-1],
@@ -78,6 +92,7 @@ class GraphDiffPool(GraphLayer):
                 bias_constraint=self.bias_constraint
             )
 
+        # Build a pooling module if none is provided
         if not self.gnn_pool_module:
             # Row-wise softmax
             self.gnn_pool_module = GraphConv(
@@ -93,6 +108,7 @@ class GraphDiffPool(GraphLayer):
                 bias_constraint=self.bias_constraint
             )
 
+        # Build a pooling cell to apply the assignment matrix to adjacency and nodes 
         self.pooling_cell = GraphPoolingCell(self.output_dim)
 
         self._built = True
@@ -109,15 +125,19 @@ class GraphDiffPool(GraphLayer):
         assert len(adj_shape) <= 3 and len(x_shape) <= 3, \
             "Not implemented for more than 3 dims (batch included)"
 
-        embeddings = self.gnn_embd_module(x)
+        # Compute embeddings for nodes
+        embeddings = self.gnn_embd_module(x).nodes
+        # Compute the adjacency matrix
         assignment = self.gnn_pool_module(x).nodes
 
         if len(adj_shape) > 2:
             assignment = K.reshape(
                 assignment, [adj_shape[-1], self.output_dim])
 
-        pooled = self.pooling_cell([embeddings, assignment])
+        # Apply pooling to adjacency and embeddings 
+        pooled = self.pooling_cell([adjacency, embeddings, assignment])
 
+        # Add the normalization losses
         self.add_loss([GraphDiffPool.pooling_loss(assignment, adjacency),
                        GraphDiffPool.assignment_loss(assignment)])
 

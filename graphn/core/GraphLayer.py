@@ -5,6 +5,17 @@ from .GraphWrapper import GraphWrapper
 
 
 class GraphLayer(Layer):
+    """ 
+    An override of keras.engine.topology.Layer working on graphs. Only two differences 
+    when writting a class inheriting graphn.GraphLayer: 
+
+    1. At the end of the usual 'call()' method, call the method 'self.make_output_graph()', 
+    passing the (new) adjacency and the (new) nodes as arguments. This function will return 
+    a GraphWrapper object that can be returned from the 'call()' method. 
+
+    2. If you called the aforementionned 'make_output_graph()' method, you don't need to 
+    override the 'compute_output_shape()', it will be deduced from the output graph's shape.   
+    """
 
     def __init__(self, **kwargs):
         super(GraphLayer, self).__init__(**kwargs)
@@ -12,13 +23,18 @@ class GraphLayer(Layer):
             name="graph_wrapper_%s" % self.name)
 
     def make_output_graph(self, adjacency, nodes):
+        """ 
+        Constructs the 'GraphWrapper' output using the given adjacency and nodes 
+        and returns it. 
+        Shapes of adjacency and nodes will be checked.
+        Args: 
+        - adjacency: (..., N, N) tensor 
+        - nodes: (..., N, F) tensor
+        where N is the number of nodes and F the number of features. 
+        """
         if not self._built:
             raise ValueError("The layer is not built yet. \
-                Method add_output_graph() should be called in the build().")
-
-        elif self._output_graph_wrapper is None:
-            raise ValueError("There is no graph attached with the layer %s. \
-                Method add_output_graph() should be called in the build()." % self.name)
+                make_output_graph() should be called in the call() method.")
 
         self._output_graph_wrapper.build(adjacency=adjacency, nodes=nodes)
         return self._output_graph_wrapper
@@ -27,6 +43,10 @@ class GraphLayer(Layer):
         return self._output_graph_wrapper.shape
 
     def __call__(self, inputs, **kwargs):
+        """
+        inputs: a GraphWrapper object or 
+        a list of 'adjacency, nodes'. 
+        """
 
         # Keras do not supports nested lists, unpack nodes and adjacency
         if isinstance(inputs, list) and not isinstance(inputs, GraphWrapper):

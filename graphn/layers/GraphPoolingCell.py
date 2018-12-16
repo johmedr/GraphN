@@ -4,12 +4,16 @@ from ..core import GraphLayer
 
 
 class GraphPoolingCell(GraphLayer):
-    """ A simple pooling layer """
+    """ 
+    Applies a kind of hierarchical pooling on a graph, 
+    assigning adjacency matrix and nodes to a new graph configuration. 
+    For more details, see the "Pooling with an assignement matrix" section 
+    on page 4 in "Hierarchical Graph Representation Learning with
+    Differentiable Pooling" (Rex Ying et al., 2018, https://arxiv.org/pdf/1806.08804.pdf). 
+    """
 
     def __init__(self, output_dim, **kwargs):
-
         super(GraphPoolingCell, self).__init__(**kwargs)
-
         self.output_dim = output_dim
 
     def build(self, input_shape):
@@ -29,9 +33,17 @@ class GraphPoolingCell(GraphLayer):
         self._built = True
 
     def call(self, x):
-        """ x: List containing 
-              - a graph wrapper (shape: [(n_nodes, n_nodes), (n_nodes, n_features)])
-              - the assignment matrix (shape: (n_nodes, new_n_nodes))"""
+        """ 
+        x: List containing             
+            - the adjacency matrix with shape (..., N, N)
+            - the nodes with shape (..., N, F)
+            - the assignment matrix with shape (N, N')
+        NB: adjacency and nodes can be given in a GraphWrapper object
+
+        Returns a graph wrapper holding 
+            - the new adjacency matrix with shape (..., N', N')
+            - the new nodes with shape (..., N', F)
+        """
         if not (isinstance(x, list) and len(x) == 3):
             raise AttributeError(
                 "Incorrect arguments for layer %s in call(). Get %s." % (self.name, x))
