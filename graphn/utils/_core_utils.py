@@ -1,4 +1,11 @@
 class _Wrapper(list):
+    """
+    A simple wrapper overriding the common list methods to be 
+    used as the base of simple iterable objects to ensure compatibility
+    with list-based engines. 
+    _Wrapper inherits from a list for Keras compatibility, but
+    override list default methods to ensure avoid a weird behavior
+    """
 
     def __init__(self, **kwargs):
         super(_Wrapper, self).__init__(self, **kwargs)
@@ -15,8 +22,6 @@ class _Wrapper(list):
         raise NotImplementedError(
             "This method is not available on this object.")
 
-    # GraphWrapper inherits from a list for Keras compatibility, but
-    # override list default methods to ensure avoid a weird behavior
     def append(self, **kwargs): _Wrapper._disabled_method()
 
     def extend(self, **kwargs): _Wrapper._disabled_method()
