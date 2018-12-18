@@ -3,6 +3,9 @@ from ..core import GraphWrapper
 
 from keras.layers import Dropout
 
+from keras.utils.generic_utils import to_list
+from keras.utils.generic_utils import unpack_singleton
+
 
 class GraphDropout(GraphLayer):
     """ 
@@ -49,12 +52,14 @@ class GraphDropout(GraphLayer):
             seed=self.nodes_seed
         )(nodes)
 
+        new_adj = to_list(adjacency)
         if self.use_adjacency_dropout:
-            new_adj = Dropout(
+            new_adj = [Dropout(
                 rate=self.adjacency_rate,
                 noise_shape=self.adjacency_noise_shape,
                 seed=self.nodes_seed
-            )(adjacency)
+            )(a) for a in new_adj] 
+            new_adj = unpack_singleton(new_adj)
         else:
             new_adj = adjacency
 
