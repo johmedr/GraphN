@@ -1,4 +1,5 @@
 from ..core import GraphLayer
+from ..core import GraphWrapper
 
 from keras.layers import Dropout
 
@@ -36,8 +37,9 @@ class GraphDropout(GraphLayer):
             self.use_adjacency_dropout = False
 
     def call(self, inputs):
-        if isinstance(inputs, list):
-            adjacency, nodes = inputs
+        if isinstance(inputs, GraphWrapper):
+            nodes = inputs.nodes
+            adjacency = inputs.adjacency
         else:
             raise ValueError()
 

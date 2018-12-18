@@ -20,7 +20,9 @@ class GraphConv(GraphLayer):
     """
 
     def __init__(self, filters,
+                 basis=-1, 
                  activation=None,
+                 use_attention=False,
                  use_bias=True,
                  kernel_initializer='glorot_uniform',
                  bias_initializer='zeros',
@@ -37,7 +39,9 @@ class GraphConv(GraphLayer):
         super(GraphConv, self).__init__(**kwargs)
 
         self.filters = filters
+        self.basis = basis
         self.activation = activations.get(activation)
+        self.use_attention = use_attention
         self.use_bias = use_bias
         self.kernel_initializer = initializers.get(kernel_initializer)
         self.bias_initializer = initializers.get(bias_initializer)
@@ -52,22 +56,27 @@ class GraphConv(GraphLayer):
         assert isinstance(input_shape, GraphShape)
 
         x_shape = input_shape.nodes_shape
-        adj_shape = input_shape.adjacency_shape
+        adj_shape = to_list(input_shape.adjacency_shape)
 
-        assert len(x_shape) >= 2, "Expected at least than 2 dims, get %s" % (
+        assert 4 > len(x_shape) >= 2, "Expected at least than 2 dims, get %s" % (
             x_shape,)
 
-        for a in to_list(adj_shape): 
-            assert len(a) >= 2, "Expected at least than 2 dims, get %s" % (a,)
+        for a in adj_shape:
+            assert 4 > len(a) >= 2, "Expected at least than 2 dims, get %s" % (a,)
 
-        self.kernel = self.add_weight(
+        if self.basis != -1: 
+            self.basis = min(self.basis, len(adj_shape))
+        else: 
+            self.basis = len(adj_shape)
+
+        self.kernel = [self.add_weight(
             shape=(x_shape[-1], self.filters),
             initializer=self.kernel_initializer,
             name='kernel',
             regularizer=self.kernel_regularizer,
             constraint=self.kernel_constraint,
             trainable=True
-        )
+        ) for _ in range(self.basis)]
 
         if self.use_bias:
             self.bias = self.add_weight(
@@ -78,31 +87,53 @@ class GraphConv(GraphLayer):
                 constraint=self.bias_constraint
             )
 
-        self.built = True
-
     def call(self, inputs):
         """ 
         x: List/GraphWrapper 
           - the adjacency matrix (shape: (n_nodes, n_nodes))
           - the nodes features (shape: (n_nodes, n_features))
           TODO: implement here the renormalization trick """
-        assert isinstance(inputs, GraphWrapper)
-        nodes, adjacency = inputs
-
-        new_nodes = K.dot(nodes, self.kernel)
-
-        if len(K.int_shape(nodes)) > 2:
-            new_nodes = K.batch_dot(adjacency, new_nodes)
+        if isinstance(inputs, GraphWrapper):
+            nodes = inputs.nodes
+            adjacency = inputs.adjacency
         else:
-            new_nodes = K.dot(adjacency, new_nodes)
+            raise ValueError()
+
+        adj_ls = to_list(adjacency)
+
+        supports = []
+        for k in self.kernel:
+            supports.append(K.dot(nodes, k))
+
+        features = []
+        for x, a in zip(supports, adj_ls):
+            if len(K.int_shape(x)) == 3:
+                x = K.permute_dimensions(x, (1,0,2))
+                x = K.batch_dot(a, x)
+                x = K.reshape(x, [-1, inputs.n_nodes, self.filters])
+            else:
+                x = K.dot(a, x)
+            features.append(x)
+
+        if len(adj_ls) > 1: 
+            features = [K.expand_dims(x, axis=0) for x in features]
+
+        if self.use_attention: 
+            raise NotImplementedError()
+        elif len(features) > 1: 
+            features = K.concatenate(features, axis=0)
+            features = K.sum(features, axis=0)
+        else:
+            features = features[0]
 
         if self.use_bias:
-            new_nodes = K.bias_add(new_nodes, self.bias,
+            features = K.bias_add(features, self.bias,
                                    data_format='channels_last')
+        
         if self.activation is not None:
-            new_nodes = self.activation(new_nodes)
+            features = self.activation(features)
 
-        return self.make_output_graph(adjacency=adjacency, nodes=new_nodes)
+        return self.make_output_graph(adjacency=adjacency, nodes=features)
 
     def get_config(self):
         config = {

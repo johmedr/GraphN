@@ -11,10 +11,13 @@ from scipy.sparse.linalg.eigen.arpack import eigsh, ArpackNoConvergence
 
 from keras.utils.data_utils import get_file
 
+
 def encode_onehot(labels):
     classes = set(labels)
-    classes_dict = {c: np.identity(len(classes))[i, :] for i, c in enumerate(classes)}
-    labels_onehot = np.array(list(map(classes_dict.get, labels)), dtype=np.int32)
+    classes_dict = {c: np.identity(len(classes))[
+        i, :] for i, c in enumerate(classes)}
+    labels_onehot = np.array(
+        list(map(classes_dict.get, labels)), dtype=np.int32)
     return labels_onehot
 
 
@@ -22,22 +25,24 @@ def load_data(fname="cora"):
     """Load citation network dataset (cora only for now)"""
     print('Loading {} dataset...'.format(fname))
 
-    fpath =  get_file(
-        fname=fname, 
-        origin="https://linqs-data.soe.ucsc.edu/public/lbc/cora.tgz", 
-        untar=True, 
-        file_hash="6a921c509e116e8aa58ed1e0db7c971a", 
+    fpath = get_file(
+        fname=fname,
+        origin="https://linqs-data.soe.ucsc.edu/public/lbc/cora.tgz",
+        untar=True,
+        file_hash="6a921c509e116e8aa58ed1e0db7c971a",
         hash_algorithm="md5"
     )
 
-    idx_features_labels = np.genfromtxt("{}/{}.content".format(fpath, fname), dtype=np.dtype(str))
+    idx_features_labels = np.genfromtxt(
+        "{}/{}.content".format(fpath, fname), dtype=np.dtype(str))
     features = sp.csr_matrix(idx_features_labels[:, 1:-1], dtype=np.float32)
     labels = encode_onehot(idx_features_labels[:, -1])
 
     # build graph
     idx = np.array(idx_features_labels[:, 0], dtype=np.int32)
     idx_map = {j: i for i, j in enumerate(idx)}
-    edges_unordered = np.genfromtxt("{}/{}.cites".format(fpath, fname), dtype=np.int32)
+    edges_unordered = np.genfromtxt(
+        "{}/{}.cites".format(fpath, fname), dtype=np.int32)
     edges = np.array(list(map(idx_map.get, edges_unordered.flatten())),
                      dtype=np.int32).reshape(edges_unordered.shape)
     adj = sp.coo_matrix((np.ones(edges.shape[0]), (edges[:, 0], edges[:, 1])),
@@ -46,7 +51,8 @@ def load_data(fname="cora"):
     # build symmetric adjacency matrix
     adj = adj + adj.T.multiply(adj.T > adj) - adj.multiply(adj.T > adj)
 
-    print('Dataset has {} nodes, {} edges, {} features.'.format(adj.shape[0], edges.shape[0], features.shape[1]))
+    print('Dataset has {} nodes, {} edges, {} features.'.format(
+        adj.shape[0], edges.shape[0], features.shape[1]))
 
     return features.todense(), adj, labels
 
@@ -101,7 +107,8 @@ def evaluate_preds(preds, labels, indices):
     split_acc = list()
 
     for y_split, idx_split in zip(labels, indices):
-        split_loss.append(categorical_crossentropy(preds[idx_split], y_split[idx_split]))
+        split_loss.append(categorical_crossentropy(
+            preds[idx_split], y_split[idx_split]))
         split_acc.append(accuracy(preds[idx_split], y_split[idx_split]))
 
     return split_loss, split_acc
@@ -116,12 +123,14 @@ def normalized_laplacian(adj, symmetric=True):
 def rescale_laplacian(laplacian):
     try:
         print('Calculating largest eigenvalue of normalized graph Laplacian...')
-        largest_eigval = eigsh(laplacian, 1, which='LM', return_eigenvectors=False)[0]
+        largest_eigval = eigsh(laplacian, 1, which='LM',
+                               return_eigenvectors=False)[0]
     except ArpackNoConvergence:
         print('Eigenvalue calculation did not converge! Using largest_eigval=2 instead.')
         largest_eigval = 2
 
-    scaled_laplacian = (2. / largest_eigval) * laplacian - sp.eye(laplacian.shape[0])
+    scaled_laplacian = (2. / largest_eigval) * \
+        laplacian - sp.eye(laplacian.shape[0])
     return scaled_laplacian
 
 
@@ -137,7 +146,7 @@ def chebyshev_polynomial(X, k):
         X_ = sp.csr_matrix(X, copy=True)
         return 2 * X_.dot(T_k_minus_one) - T_k_minus_two
 
-    for i in range(2, k+1):
+    for i in range(2, k + 1):
         T_k.append(chebyshev_recurrence(T_k[-1], T_k[-2], X))
 
     return T_k

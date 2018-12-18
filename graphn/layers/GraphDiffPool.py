@@ -1,5 +1,9 @@
 import keras.backend as K
-from keras import activations, initializers, regularizers, constraints
+
+from keras import activations
+from keras import regularizers
+from keras import initializers
+from keras import constraints
 
 from .GraphPoolingCell import GraphPoolingCell
 from .GraphConv import GraphConv
@@ -108,7 +112,8 @@ class GraphDiffPool(GraphLayer):
                 bias_constraint=self.bias_constraint
             )
 
-        # Build a pooling cell to apply the assignment matrix to adjacency and nodes 
+        # Build a pooling cell to apply the assignment matrix to adjacency and
+        # nodes
         self.pooling_cell = GraphPoolingCell(self.output_dim)
 
         self._built = True
@@ -134,7 +139,7 @@ class GraphDiffPool(GraphLayer):
             assignment = K.reshape(
                 assignment, [adj_shape[-1], self.output_dim])
 
-        # Apply pooling to adjacency and embeddings 
+        # Apply pooling to adjacency and embeddings
         pooled = self.pooling_cell([adjacency, embeddings, assignment])
 
         # Add the normalization losses

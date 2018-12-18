@@ -13,6 +13,8 @@ from keras.layers import Input
 SYM_NORM = True  # symmetric (True) vs. left-only (False) normalization
 NB_EPOCH = 200
 PATIENCE = 10  # early stopping patience
+FILTER = 'chebyshev'
+MAX_DEGREE = 2
 
 X, A, y = cora.load_data()
 y_train, y_val, y_test, idx_train, idx_val, idx_test, train_mask = cora.get_splits(
@@ -21,19 +23,38 @@ y_train, y_val, y_test, idx_train, idx_val, idx_test, train_mask = cora.get_spli
 # Normalize nodes' inputs 
 X /= X.sum(1).reshape(-1, 1)
 
-# Normalize adjacency
-A_ = cora.preprocess_adj(A, SYM_NORM)
-A_ = A_.todense()
+if FILTER == 'localpool':
+    """ Local pooling filters (see 'renormalization trick' in Kipf & Welling, arXiv 2016) """
+    print('Using local pooling filters...')
+    A_ = cora.preprocess_adj(A, SYM_NORM)
+    A_ = A_.todense()
+    support = 1
 
-# Graph holds data from cora 
-graph = [X, A_]
+    # Graph holds data from cora 
+    graph = [X, A_]
+    G = Input(shape=(None, None), batch_shape=(None, None))
+
+elif FILTER == 'chebyshev':
+    """ Chebyshev polynomial basis filters (Defferard et al., NIPS 2016)  """
+    print('Using Chebyshev polynomial basis filters...')
+    L = cora.normalized_laplacian(A, SYM_NORM)
+    L_scaled = cora.rescale_laplacian(L)
+    T_k = cora.chebyshev_polynomial(L_scaled, MAX_DEGREE)
+    T_k = [tk.todense() for tk in T_k]
+    support = MAX_DEGREE + 1
+    graph = [X]+T_k
+    G = [Input(shape=(None, None), batch_shape=(None, None)) for _ in range(support)]
+
+else:
+    raise Exception('Invalid filter type.')
 
 # Build 2 Inputs, one for the adjacency matrix, one for the nodes 
-G = Input(shape=(None, None), batch_shape=(None, None), name="adjacency")
+# G = Input(shape=(None, None), batch_shape=(None, None), name="adjacency")
 X_in = Input(shape=(X.shape[1],), name="nodes")
 
 # Wrap in a GraphWrapper
 g = GraphWrapper(adjacency=G, nodes=X_in)
+print(g)
 
 # Apply dropout on nodes
 H = GraphDropout(nodes_rate=0.5)(g)

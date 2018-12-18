@@ -1,6 +1,8 @@
 from ..utils import _Wrapper
 import warnings
 
+from keras.utils.generic_utils import to_list
+
 
 class GraphShape(_Wrapper):
 
@@ -46,7 +48,7 @@ class GraphShape(_Wrapper):
         self._adjacency_shape = adjacency_shape
 
         self._clear()
-        self._extend([self._nodes_shape, self._adjacency_shape])
+        self._extend([self._nodes_shape] + to_list(self._adjacency_shape))
 
     @property
     def adjacency_shape(self):
@@ -66,5 +68,5 @@ class GraphShape(_Wrapper):
         self.build(nodes_shape, self.adjacency_shape)
         return self._nodes_shape
 
-    def __str__(self): 
-        return 'GraphShape<%s>'%(super(GraphShape, self).__str__())
+    def __str__(self):
+        return 'GraphShape<%s>' % (super(GraphShape, self).__str__())

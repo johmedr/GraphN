@@ -3,8 +3,8 @@ from ..utils._core_utils import _Wrapper
 from .GraphShape import GraphShape
 
 import keras.backend as K
-import warnings
-    
+
+from keras.utils.generic_utils import to_list
 
 class GraphWrapper(_Wrapper):
     """
@@ -15,8 +15,8 @@ class GraphWrapper(_Wrapper):
     definition for more details). 
 
     Args: 
-        - adjacency: a (..., N, N) tensor, 
-        - nodes: a (..., N, F) tensor
+        - nodes: a (..., N, F) tensor,
+        - adjacency: a (..., N, N) tensor
 
     Properties: 
         - adjacency and nodes getters/setters,
@@ -40,7 +40,7 @@ class GraphWrapper(_Wrapper):
         self._n_nodes = None
         self._n_features = None
 
-        if nodes is not None and adjacency is not None: 
+        if nodes is not None and adjacency is not None:
             self.build(nodes=nodes, adjacency=adjacency)
 
     def build(self, nodes=None, adjacency=None):
@@ -64,24 +64,29 @@ class GraphWrapper(_Wrapper):
 
         if adjacency is None and self._adjacency is not None:
             adjacency = self._adjacency
-        else: 
-            if not isinstance(adjacency, list): 
+        else:
+            if not isinstance(adjacency, list):
                 _adjacency = [adjacency]
-            else: 
+            else:
                 _adjacency = adjacency
 
-            for a in _adjacency: 
-                if  not K.is_tensor(a):
+            for a in _adjacency:
+                if not K.is_tensor(a):
                     raise ValueError("Adjacency must be a tensor.")
 
         nodes_shape = K.int_shape(nodes)
-        adjacency_shape = K.int_shape(adjacency)
+        if isinstance(adjacency, list): 
+            adjacency_shape = [K.int_shape(a) for a in adjacency]
+        else: 
+            adjacency_shape = K.int_shape(adjacency)
 
         # Creating a GraphShape object will handle shape checking
-        if self._keras_shape is None: 
-            self._keras_shape = GraphShape(nodes_shape=nodes_shape, adjacency_shape=adjacency_shape)
-        else: 
-            self._keras_shape.build(nodes_shape=nodes_shape, adjacency_shape=adjacency_shape)
+        if self._keras_shape is None:
+            self._keras_shape = GraphShape(
+                nodes_shape=nodes_shape, adjacency_shape=adjacency_shape)
+        else:
+            self._keras_shape.build(
+                nodes_shape=nodes_shape, adjacency_shape=adjacency_shape)
 
         self._nodes = nodes
         self._adjacency = adjacency
@@ -90,7 +95,7 @@ class GraphWrapper(_Wrapper):
         self._n_nodes = nodes_shape[-2]
 
         super(GraphWrapper, self)._clear()
-        super(GraphWrapper, self)._extend([self.nodes, self.adjacency])
+        super(GraphWrapper, self)._extend([self.nodes] + to_list(self.adjacency))
 
         self._built = True
 
@@ -133,5 +138,3 @@ class GraphWrapper(_Wrapper):
     @property
     def n_nodes(self):
         return self._n_nodes
-
-
