@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 from graphn.core import GraphWrapper
 from graphn.layers import GraphConv, GraphPoolingCell, GraphDiffPool
 
@@ -8,14 +10,15 @@ from keras.utils import plot_model
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 
-def show_model(model): 
-	plt.rcParams["figure.figsize"] = (25,25) # (w, h)
-	plot_model(model, to_file='model.png', show_shapes=True)
-	img = mpimg.imread('model.png')
-	ax = plt.subplot(1,1,1)
-	plt.imshow(img, aspect='equal')
-	ax.grid(False)
-	plt.show()
+
+def show_model(model):
+    plt.rcParams["figure.figsize"] = (25, 25)  # (w, h)
+    plot_model(model, to_file='model.png', show_shapes=True)
+    img = mpimg.imread('model.png')
+    ax = plt.subplot(1, 1, 1)
+    plt.imshow(img, aspect='equal')
+    ax.grid(False)
+    plt.show()
 
 n_nodes = 15
 n_features = 7
@@ -27,9 +30,9 @@ x = Input(shape=(n_nodes, n_features), name='nodes')
 g = GraphWrapper(a, x)
 
 print(g.shape)
- 
-pool1 = Input(shape=(15,5))
-pool2 = Input(shape=(5,1))
+
+pool1 = Input(shape=(15, 5))
+pool2 = Input(shape=(5, 1))
 
 h = GraphConv(10)(g)
 print(h)
