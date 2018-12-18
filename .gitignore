@@ -1,3 +1,6 @@
 **/*.pyc
 **/__pycache__
 **/*.png
+graphn.egg-info/
+build/
+dist/
