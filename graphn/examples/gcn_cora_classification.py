@@ -36,11 +36,11 @@ X_in = Input(shape=(X.shape[1],), name="nodes")
 g = GraphWrapper(adjacency=G, nodes=X_in)
 
 # Apply dropout on nodes
-# H = GraphDropout(nodes_rate=0.5)(g)
+H = GraphDropout(nodes_rate=0.5)(g)
 
 # Apply a GraphConv with 16 filters 
-H = GraphConv(16, activation='relu')(g)
-# H = GraphDropout(nodes_rate=0.5)(H)
+H = GraphConv(16, activation='relu')(H)
+H = GraphDropout(nodes_rate=0.5)(H)
 
 # Apply a GraphConv with softmax to predict each nodes' class 
 Y = GraphConv(y.shape[1], activation='softmax')(H)
