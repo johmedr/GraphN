@@ -1,8 +1,10 @@
 from ..utils._core_utils import _Wrapper
 
+from .GraphShape import GraphShape
+
 import keras.backend as K
 import warnings
-
+    
 
 class GraphWrapper(_Wrapper):
     """
@@ -26,7 +28,7 @@ class GraphWrapper(_Wrapper):
     with adjacency and nodes. 
     """
 
-    def __init__(self, adjacency=None, nodes=None, name="GraphWrapper"):
+    def __init__(self, nodes=None, adjacency=None, name="GraphWrapper"):
         super(GraphWrapper, self).__init__()
 
         self._keras_shape = None
@@ -38,13 +40,10 @@ class GraphWrapper(_Wrapper):
         self._n_nodes = None
         self._n_features = None
 
-        if K.is_tensor(nodes) and K.is_tensor(adjacency):
-            self.build(adjacency, nodes)
+        if nodes is not None and adjacency is not None: 
+            self.build(nodes=nodes, adjacency=adjacency)
 
-        elif nodes is not None or adjacency is not None:
-            raise ValueError("Adjacency and nodes must be tensors.")
-
-    def build(self, adjacency=None, nodes=None):
+    def build(self, nodes=None, adjacency=None):
         """
         Checks the shapes and builds the GraphWrapper with the given 
         adjacency matrix and nodes. If nodes or adjacency matrix are 
@@ -53,70 +52,52 @@ class GraphWrapper(_Wrapper):
         when the nodes or adjacency setter is called. 
 
         Args: 
-            - adjacency: a (..., N, N) tensor, 
-            - nodes: a (..., N, F) tensor
+            - nodes: a (..., N, F) tensor,
+            - adjacency: a (..., N, N) tensor
 
         Returns 'self'
         """
-        if adjacency is None:
-            adjacency = self._adjacency
-        elif not K.is_tensor(adjacency):
-            raise ValueError("Adjacency must be a tensor.")
-
-        if nodes is None:
+        if nodes is None and self._nodes is not None:
             nodes = self._nodes
         elif not K.is_tensor(nodes):
             raise ValueError("Nodes must be a tensor.")
 
-        adjacency_shape = K.int_shape(adjacency)
+        if adjacency is None and self._adjacency is not None:
+            adjacency = self._adjacency
+        else: 
+            if not isinstance(adjacency, list): 
+                _adjacency = [adjacency]
+            else: 
+                _adjacency = adjacency
+
+            for a in _adjacency: 
+                if  not K.is_tensor(a):
+                    raise ValueError("Adjacency must be a tensor.")
+
         nodes_shape = K.int_shape(nodes)
+        adjacency_shape = K.int_shape(adjacency)
 
-        self.check_shape(adjacency_shape, nodes_shape)
+        # Creating a GraphShape object will handle shape checking
+        if self._keras_shape is None: 
+            self._keras_shape = GraphShape(nodes_shape=nodes_shape, adjacency_shape=adjacency_shape)
+        else: 
+            self._keras_shape.build(nodes_shape=nodes_shape, adjacency_shape=adjacency_shape)
 
-        self._adjacency = adjacency
         self._nodes = nodes
+        self._adjacency = adjacency
 
-        self._n_nodes = adjacency_shape[-1]
         self._n_features = nodes_shape[-1]
-
-        self._keras_shape = [adjacency_shape, nodes_shape]
+        self._n_nodes = nodes_shape[-2]
 
         super(GraphWrapper, self)._clear()
-        super(GraphWrapper, self)._extend([self.adjacency, self.nodes])
+        super(GraphWrapper, self)._extend([self.nodes, self.adjacency])
 
         self._built = True
 
         return self
 
-    def check_shape(self, adjacency_shape, nodes_shape):
-        """
-        Performs a simple check on adjacency and nodes, to 
-        ensure that they are correct. 
-
-        Please note that currently this will only result in a warning
-        if adjacency and nodes don't hold the same number of nodes.  
-        """
-        if len(adjacency_shape) < 2:
-            raise ValueError("Expected at least 2 dims, get %s" %
-                             (adjacency_shape,))
-
-        if len(nodes_shape) < 2:
-            raise ValueError("Expected at least 2 dims, get %s" %
-                             (nodes_shape,))
-
-        if adjacency_shape[-1] != adjacency_shape[-2]:
-            raise ValueError("Wrong adjacency shape: get %s." %
-                             (adjacency_shape[-2:]))
-
-        # Let keras do the job, just raise a warning
-        if nodes_shape[-2] != adjacency_shape[-1]:
-           warnings.warn("Adjacency shape and nodes shape doesn't match. Get %s and %s."%(
-               adjacency_shape[-2:], nodes_shape[-2:]))
-
-        return True
-
     def __str__(self):
-        return "GraphWrapper< adj:%s || nodes:%s >" % (self._adjacency, self._nodes)
+        return "GraphWrapper< nodes:%s || adj:%s  >" % (self._nodes, self._adjacency)
 
     @property
     def nodes(self):
@@ -152,3 +133,5 @@ class GraphWrapper(_Wrapper):
     @property
     def n_nodes(self):
         return self._n_nodes
+
+

@@ -1,7 +1,15 @@
 import keras.backend as K
-from keras import activations, regularizers, initializers, constraints
+
+from keras import activations
+from keras import regularizers
+from keras import initializers
+from keras import constraints
+
+from keras.utils.generic_utils import to_list
 
 from ..core import GraphLayer
+from ..core import GraphShape
+from ..core import GraphWrapper
 
 
 class GraphConv(GraphLayer):
@@ -40,14 +48,17 @@ class GraphConv(GraphLayer):
         self.bias_constraint = constraints.get(bias_constraint)
 
     def build(self, input_shape):
-        assert isinstance(input_shape, list) and len(input_shape) == 2
+        print(input_shape)
+        assert isinstance(input_shape, GraphShape)
 
-        adj_shape, x_shape = input_shape
+        x_shape = input_shape.nodes_shape
+        adj_shape = input_shape.adjacency_shape
 
-        assert len(adj_shape) >= 2, "Expected at least than 2 dims, get %s" % (
-            adj_shape,)
         assert len(x_shape) >= 2, "Expected at least than 2 dims, get %s" % (
             x_shape,)
+
+        for a in to_list(adj_shape): 
+            assert len(a) >= 2, "Expected at least than 2 dims, get %s" % (a,)
 
         self.kernel = self.add_weight(
             shape=(x_shape[-1], self.filters),
@@ -66,21 +77,17 @@ class GraphConv(GraphLayer):
                 regularizer=self.bias_regularizer,
                 constraint=self.bias_constraint
             )
-        else:
-            self.bias = None
 
         self.built = True
 
-    def call(self, x):
+    def call(self, inputs):
         """ 
         x: List/GraphWrapper 
           - the adjacency matrix (shape: (n_nodes, n_nodes))
           - the nodes features (shape: (n_nodes, n_features))
           TODO: implement here the renormalization trick """
-        if isinstance(x, list):
-            adjacency, nodes = x
-        else:
-            raise ValueError()
+        assert isinstance(inputs, GraphWrapper)
+        nodes, adjacency = inputs
 
         new_nodes = K.dot(nodes, self.kernel)
 
