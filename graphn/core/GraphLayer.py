@@ -27,6 +27,8 @@ class GraphLayer(Layer):
 
     2. If you called the aforementionned 'make_output_graph()' method, you don't need to 
     override the 'compute_output_shape()', it will be deduced from the output graph's shape.   
+
+    For the moment, handles only one ouput graph (to be implemented).
     """
 
     def __init__(self, **kwargs):
@@ -56,8 +58,10 @@ class GraphLayer(Layer):
 
     def __call__(self, inputs, **kwargs):
         """
-        inputs: a GraphWrapper object or 
-        a list of 'adjacency, nodes'. 
+        Overriding the Layer's __call__ method for graph wrappers. 
+        The overriding is mostly based on the __call__ code from 
+        'keras/engine/base_layer.py' for the moment, with some changes 
+        to handle graphs. 
         """
         # If arguments are 'keras-style' arguments, let keras to the job
         if K.is_tensor(inputs) or (isinstance(inputs, list) and not isinstance(inputs, GraphWrapper)):

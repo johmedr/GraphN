@@ -58,7 +58,7 @@ class GraphDropout(GraphLayer):
                 rate=self.adjacency_rate,
                 noise_shape=self.adjacency_noise_shape,
                 seed=self.nodes_seed
-            )(a) for a in new_adj] 
+            )(a) for a in new_adj]
             new_adj = unpack_singleton(new_adj)
         else:
             new_adj = adjacency

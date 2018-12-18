@@ -1,10 +1,10 @@
-from ..utils._core_utils import _Wrapper
-
+from ._Wrapper import _Wrapper
 from .GraphShape import GraphShape
 
 import keras.backend as K
 
 from keras.utils.generic_utils import to_list
+
 
 class GraphWrapper(_Wrapper):
     """
@@ -75,9 +75,9 @@ class GraphWrapper(_Wrapper):
                     raise ValueError("Adjacency must be a tensor.")
 
         nodes_shape = K.int_shape(nodes)
-        if isinstance(adjacency, list): 
+        if isinstance(adjacency, list):
             adjacency_shape = [K.int_shape(a) for a in adjacency]
-        else: 
+        else:
             adjacency_shape = K.int_shape(adjacency)
 
         # Creating a GraphShape object will handle shape checking
@@ -95,7 +95,8 @@ class GraphWrapper(_Wrapper):
         self._n_nodes = nodes_shape[-2]
 
         super(GraphWrapper, self)._clear()
-        super(GraphWrapper, self)._extend([self.nodes] + to_list(self.adjacency))
+        super(GraphWrapper, self)._extend(
+            [self.nodes] + to_list(self.adjacency))
 
         self._built = True
 

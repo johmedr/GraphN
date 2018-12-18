@@ -17,10 +17,16 @@ class GraphConv(GraphLayer):
     A graph convolution layer using the first-order approximation of 
     Chebyshev polynomials, as suggested in "Semi-supervised classification with Graph Convolutional 
     Networks" (T. Kipf and M. Welling, 2016, https://arxiv.org/pdf/1609.02907.pdf)
+
+    Args: 
+        - filters: number of output features, 
+        - basis: number of adjacency matrices to use,
+        - use_attention: not implemented yet, 
+        - conventional keras args... 
     """
 
     def __init__(self, filters,
-                 basis=-1, 
+                 basis=-1,
                  activation=None,
                  use_attention=False,
                  use_bias=True,
@@ -62,11 +68,12 @@ class GraphConv(GraphLayer):
             x_shape,)
 
         for a in adj_shape:
-            assert 4 > len(a) >= 2, "Expected at least than 2 dims, get %s" % (a,)
+            assert 4 > len(
+                a) >= 2, "Expected at least than 2 dims, get %s" % (a,)
 
-        if self.basis != -1: 
+        if self.basis != -1:
             self.basis = min(self.basis, len(adj_shape))
-        else: 
+        else:
             self.basis = len(adj_shape)
 
         self.kernel = [self.add_weight(
@@ -108,19 +115,19 @@ class GraphConv(GraphLayer):
         features = []
         for x, a in zip(supports, adj_ls):
             if len(K.int_shape(x)) == 3:
-                x = K.permute_dimensions(x, (1,0,2))
+                x = K.permute_dimensions(x, (1, 0, 2))
                 x = K.batch_dot(a, x)
                 x = K.reshape(x, [-1, inputs.n_nodes, self.filters])
             else:
                 x = K.dot(a, x)
             features.append(x)
 
-        if len(adj_ls) > 1: 
+        if len(adj_ls) > 1:
             features = [K.expand_dims(x, axis=0) for x in features]
 
-        if self.use_attention: 
+        if self.use_attention:
             raise NotImplementedError()
-        elif len(features) > 1: 
+        elif len(features) > 1:
             features = K.concatenate(features, axis=0)
             features = K.sum(features, axis=0)
         else:
@@ -128,8 +135,8 @@ class GraphConv(GraphLayer):
 
         if self.use_bias:
             features = K.bias_add(features, self.bias,
-                                   data_format='channels_last')
-        
+                                  data_format='channels_last')
+
         if self.activation is not None:
             features = self.activation(features)
 

@@ -1,10 +1,18 @@
-from ..utils import _Wrapper
+from ._Wrapper import _Wrapper
+
 import warnings
 
 from keras.utils.generic_utils import to_list
 
 
 class GraphShape(_Wrapper):
+    """
+    A wrapper for a graph shape.
+
+    Args: 
+        - nodes_shape: a tuple (..., N, F), 
+        - adjacency_shape: a tuple or a list of tuple (..., N, N)
+    """
 
     def __init__(self, nodes_shape=None, adjacency_shape=None):
         self._adjacency_shape = None

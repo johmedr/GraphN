@@ -1,4 +1,5 @@
 from setuptools import setup, find_packages
+
 from os import path
 from io import open
 
@@ -9,7 +10,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 setup(
     name='graphn',
     version='0.0.1',
-    description='Graph Neural Networks with Keras made easy.', 
+    description='Graph Neural Networks with Keras made easy.',
     long_description=long_description,
     long_description_content_type='text/markdown',
     license='MIT',
@@ -29,14 +30,14 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
     ],
-    #keywords='deep- setuptools development',  
+    #keywords='deep- setuptools development',
     packages=find_packages(),
-    install_requires=['keras'], 
-    #extras_require={},
+    install_requires=['keras'],
+    # extras_require={},
     package_data={
         'graphn': ['README.md'],
     },
     project_urls={
-        'Github':'https://github.com/yop0/GraphN'
+        'Github': 'https://github.com/yop0/GraphN'
     },
 )
