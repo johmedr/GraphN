@@ -20,7 +20,7 @@ class GraphPoolingCell(GraphLayer):
         """ Channel last: (batchs, n_nodes, n_features)"""
         assert isinstance(input_shape, list) and len(input_shape) == 3
 
-        adj_shape, x_shape, assignment_shape = input_shape
+        x_shape, adj_shape, assignment_shape = input_shape
 
         assert len(adj_shape) >= 2, "Expected at least 2 dims, get %s" % (
             adj_shape,)
@@ -29,8 +29,6 @@ class GraphPoolingCell(GraphLayer):
         assert len(assignment_shape) >= 2 and assignment_shape[-2] == adj_shape[-1] and assignment_shape[-1] == self.output_dim, \
             "Wrong assignment shape: get %s, expected the last 2 dims to be %s" % (
                 assignment_shape, (adj_shape[-1], self.output_dim))
-
-        self._built = True
 
     def call(self, x):
         """ 
@@ -48,7 +46,7 @@ class GraphPoolingCell(GraphLayer):
             raise AttributeError(
                 "Incorrect arguments for layer %s in call(). Get %s." % (self.name, x))
 
-        adjacency, nodes, assignment = x
+        nodes, adjacency, assignment = x
 
         adj_shape = K.int_shape(adjacency)
         x_shape = K.int_shape(nodes)

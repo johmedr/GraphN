@@ -136,3 +136,7 @@ class GraphWrapper(_Wrapper):
     @property
     def n_nodes(self):
         return self._n_nodes
+
+    @property
+    def is_built(self):
+        return self._built

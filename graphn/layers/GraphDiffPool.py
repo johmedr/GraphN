@@ -5,10 +5,14 @@ from keras import regularizers
 from keras import initializers
 from keras import constraints
 
+from keras.utils.generic_utils import to_list
+
 from .GraphPoolingCell import GraphPoolingCell
 from .GraphConv import GraphConv
 
 from ..core import GraphLayer
+from ..core import GraphShape
+from ..core import GraphWrapper
 from ..utils import frobenius_norm
 from ..utils import entropy
 
@@ -73,14 +77,17 @@ class GraphDiffPool(GraphLayer):
         return K.mean(entropy(assignment, axis=0))
 
     def build(self, input_shape):
-        assert isinstance(input_shape, list) and len(input_shape) == 2
+        assert isinstance(input_shape, GraphShape)
 
-        adj_shape, x_shape = input_shape
+        x_shape = input_shape.nodes_shape
+        adj_shape = to_list(input_shape.adjacency_shape)
 
-        assert len(adj_shape) >= 2, "Expected more than 2 dims, get %s" % (
-            adj_shape,)
-        assert len(x_shape) >= 2, "Expected more than 2 dims, get %s" % (
+        assert 4 > len(x_shape) >= 2, "Expected at least than 2 dims, get %s" % (
             x_shape,)
+
+        for a in adj_shape:
+            assert 4 > len(
+                a) >= 2, "Expected at least than 2 dims, get %s" % (a,)
 
         # Build an embedding module if none is provided
         if not self.gnn_embd_module:
@@ -117,31 +124,29 @@ class GraphDiffPool(GraphLayer):
         # nodes
         self.pooling_cell = GraphPoolingCell(self.output_dim)
 
-        self._built = True
-
-    def call(self, x):
-        if isinstance(x, list):
-            adjacency, nodes = x
+    def call(self, inputs):
+        if isinstance(inputs, GraphWrapper):
+            adjacency = inputs.adjacency
         else:
             raise ValueError()
 
-        adj_shape = K.int_shape(adjacency)
-        x_shape = K.int_shape(nodes)
+        nodes_shape, adj_shape = inputs.shape
 
-        assert len(adj_shape) <= 3 and len(x_shape) <= 3, \
+        assert len(adj_shape) <= 3 and len(nodes_shape) <= 3, \
             "Not implemented for more than 3 dims (batch included)"
 
         # Compute embeddings for nodes
-        embeddings = self.gnn_embd_module(x).nodes
+        embeddings = self.gnn_embd_module(inputs).nodes
+
         # Compute the adjacency matrix
-        assignment = self.gnn_pool_module(x).nodes
+        assignment = self.gnn_pool_module(inputs).nodes
 
         if len(adj_shape) > 2:
             assignment = K.reshape(
                 assignment, [adj_shape[-1], self.output_dim])
 
         # Apply pooling to adjacency and embeddings
-        pooled = self.pooling_cell([adjacency, embeddings, assignment])
+        pooled = self.pooling_cell([embeddings, adjacency, assignment])
 
         # Add the normalization losses
         self.add_loss([GraphDiffPool.pooling_loss(assignment, adjacency),

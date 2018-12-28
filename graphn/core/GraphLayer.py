@@ -65,7 +65,18 @@ class GraphLayer(Layer):
         """
         # If arguments are 'keras-style' arguments, let keras to the job
         if K.is_tensor(inputs) or (isinstance(inputs, list) and not isinstance(inputs, GraphWrapper)):
+            print("here with %s" % (inputs,))
             output = super(GraphLayer, self).__call__(inputs, **kwargs)
+            # Catch outputs and make sure to return a graph wrapper
+            if isinstance(output, list) and len(output) >= 2 and self._output_graph_wrapper.is_built:
+                if self._output_graph_wrapper.nodes != output[0]:
+                    self._output_graph_wrapper.nodes = output[0]
+
+                # for a, o in zip(self._output_graph_wrapper.adjacency, output[1:]):
+                #     if self._output_graph_wrapper.adjacency != output[0]:
+                #         self._output_graph_wrapper.adjacency = output[0]
+
+            output = self._output_graph_wrapper
         else:
             if isinstance(inputs, list) and not isinstance(inputs, GraphWrapper):
                 inputs = inputs[:]
