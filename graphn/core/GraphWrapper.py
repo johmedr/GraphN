@@ -65,10 +65,7 @@ class GraphWrapper(_Wrapper):
         if adjacency is None and self._adjacency is not None:
             adjacency = self._adjacency
         else:
-            if not isinstance(adjacency, list):
-                _adjacency = [adjacency]
-            else:
-                _adjacency = adjacency
+            _adjacency = to_list(adjacency)
 
             for a in _adjacency:
                 if not K.is_tensor(a):
