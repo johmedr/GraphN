@@ -58,7 +58,6 @@ class GraphConv(GraphLayer):
         self.bias_constraint = constraints.get(bias_constraint)
 
     def build(self, input_shape):
-        print(input_shape)
         assert isinstance(input_shape, GraphShape)
 
         x_shape = input_shape.nodes_shape

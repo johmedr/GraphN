@@ -9,7 +9,8 @@ from .GraphPoolingCell import GraphPoolingCell
 from .GraphConv import GraphConv
 
 from ..core import GraphLayer
-from ..utils import frobenius_norm, entropy
+from ..utils import frobenius_norm
+from ..utils import entropy
 
 
 class GraphDiffPool(GraphLayer):
