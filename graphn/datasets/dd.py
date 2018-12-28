@@ -9,7 +9,7 @@ from keras.utils.data_utils import get_file
 from keras.utils import to_categorical
 
 
-def load_data(fname='DD'):
+def load_data(fname='DD', test_split=.2, rng_seed=None):
     print("Loading {} dataset".format(fname))
 
     fpath = get_file(
@@ -33,6 +33,7 @@ def load_data(fname='DD'):
     with open(os.path.join(fpath, "DD_graph_labels.txt"), 'r') as f:
         for line in f:
             gphs_lbls.append(int(line) - 1)
+    gphs_lbls = np.array(gphs_lbls, dtype=np.float32)
     # N: number of graphs
     N = len(gphs_lbls)
 
@@ -63,4 +64,25 @@ def load_data(fname='DD'):
     # Turn labels in one-hot features
     nodes = to_categorical(lbls)
 
-    return adjs, nodes, gphs_lbls, n, N, m
+    np.random.seed(rng_seed)
+    p = np.random.permutation(range(N))
+
+    train_split = int((1 - test_split) * N)
+
+    train_adjs = [adjs[i] for i in p[:train_split]]
+    train_lbls = gphs_lbls[p[:train_split]]
+
+    test_adjs = [adjs[i] for i in p[train_split:]]
+    test_lbls = gphs_lbls[p[train_split:]]
+
+    return nodes, (train_adjs, train_lbls), (test_adjs, test_lbls), n, N, m
+
+
+def normalize_adj(adj, symmetric=True):
+    if symmetric:
+        d = sp.diags(np.power(np.array(adj.sum(1)), -0.5).flatten(), 0)
+        a_norm = adj.dot(d).transpose().dot(d).tocsr()
+    else:
+        d = sp.diags(np.power(np.array(adj.sum(1)), -1).flatten(), 0)
+        a_norm = d.dot(adj).tocsr()
+    return a_norm
